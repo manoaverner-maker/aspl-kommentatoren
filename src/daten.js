@@ -23,19 +23,49 @@ async function holeJson(url) {
   return antwort.json()
 }
 
-export async function ladeAlleDaten() {
-  const basis = datenBasis()
-  const [strecken, kalender, ergebnisse] = await Promise.all([
-    holeJson(basis + 'strecken.json'),
-    holeJson(basis + 'kalender.json'),
-    holeJson(basis + 'ergebnisse.json'),
-  ])
+const CACHE_KEY = 'aspl_kom_cache_v1'
+
+function baueDaten(basis, strecken, kalender, ergebnisse, stand, ausCache) {
   return {
     basis,
     strecken,
     kalender,
     ergebnisse,
+    stand,
+    ausCache,
     streckenMap: Object.fromEntries(strecken.map((s) => [s.id, s])),
+  }
+}
+
+export async function ladeAlleDaten() {
+  const basis = datenBasis()
+  try {
+    const [strecken, kalender, ergebnisse] = await Promise.all([
+      holeJson(basis + 'strecken.json'),
+      holeJson(basis + 'kalender.json'),
+      holeJson(basis + 'ergebnisse.json'),
+    ])
+    const stand = Date.now()
+    // Offline-Puffer aktualisieren, damit ein Netz-Blip im Stream die Seite nicht killt
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ basis, strecken, kalender, ergebnisse, stand }))
+    } catch {
+      /* Speicher voll / privater Modus — nicht kritisch */
+    }
+    return baueDaten(basis, strecken, kalender, ergebnisse, stand, false)
+  } catch (err) {
+    // Fetch fehlgeschlagen → letzten erfolgreichen Stand aus dem Puffer nehmen
+    let roh = null
+    try {
+      roh = localStorage.getItem(CACHE_KEY)
+    } catch {
+      /* ignore */
+    }
+    if (roh) {
+      const c = JSON.parse(roh)
+      return { ...baueDaten(c.basis, c.strecken, c.kalender, c.ergebnisse, c.stand, true), fehler: err }
+    }
+    throw err
   }
 }
 

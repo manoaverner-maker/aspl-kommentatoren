@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRoute, gehe } from './lib/router.js'
 import {
   ladeAlleDaten,
@@ -15,6 +15,9 @@ import {
 import redaktion from './data/redaktion.json'
 import GridUebersicht from './routes/GridUebersicht.jsx'
 import Meisterschaft from './routes/Meisterschaft.jsx'
+import Vergleich from './routes/Vergleich.jsx'
+import OverlaySteuerung from './routes/OverlaySteuerung.jsx'
+import Spickzettel from './routes/Spickzettel.jsx'
 import Overlay from './routes/Overlay.jsx'
 import Fahrerkarte from './komponenten/Fahrerkarte.jsx'
 
@@ -27,6 +30,15 @@ function standardStrecke(kalenderObj, ergebnisObj, streckenMap) {
   return rennen[0]?.streckeId ?? null
 }
 
+function standText(stand, _takt) {
+  if (!stand) return ''
+  const min = Math.floor((Date.now() - stand) / 60000)
+  if (min < 1) return 'gerade eben'
+  if (min === 1) return 'vor 1 Min'
+  if (min < 60) return `vor ${min} Min`
+  return `vor ${Math.floor(min / 60)} Std`
+}
+
 export default function App() {
   const route = useRoute()
   const [zustand, setZustand] = useState({ lade: true, fehler: null, daten: null })
@@ -34,6 +46,7 @@ export default function App() {
   const [seriesId, setSeriesId] = useState(null)
   const [streckeId, setStreckeId] = useState(null)
   const [offenerFahrer, setOffenerFahrer] = useState(null)
+  const [takt, setTakt] = useState(0)
 
   // Overlay-Route -> Body transparent halten, sonst dunkel
   useEffect(() => {
@@ -63,9 +76,31 @@ export default function App() {
     }
   }, [])
 
+  // Auto-Refresh: neu eingetragene Ergebnisse ohne Reload übernehmen.
+  // Auswahl (Saison/Series/Strecke) bleibt erhalten.
+  const refresh = useCallback(() => {
+    ladeAlleDaten()
+      .then((daten) => setZustand((z) => (z.daten ? { ...z, daten } : z)))
+      .catch(() => {
+        /* offline & kein Puffer — aktuellen Stand behalten */
+      })
+  }, [])
+
+  useEffect(() => {
+    if (zustand.lade || zustand.fehler) return
+    const timer = setInterval(refresh, 3 * 60 * 1000)
+    const takter = setInterval(() => setTakt((t) => t + 1), 30 * 1000)
+    const beiSichtbar = () => document.visibilityState === 'visible' && refresh()
+    document.addEventListener('visibilitychange', beiSichtbar)
+    return () => {
+      clearInterval(timer)
+      clearInterval(takter)
+      document.removeEventListener('visibilitychange', beiSichtbar)
+    }
+  }, [zustand.lade, zustand.fehler, refresh])
+
   const daten = zustand.daten
 
-  // Abgeleitete Sicht der aktuell gewaehlten Saison+Series
   const kontext = useMemo(() => {
     if (!daten || !saisonId || !seriesId) return null
     const kalenderObj = findeKalender(daten.kalender, saisonId, seriesId)
@@ -88,10 +123,7 @@ export default function App() {
     serien.forEach((s) => m.set(s.saisonId, s.saisonName))
     return [...m.entries()].map(([id, name]) => ({ id, name }))
   }, [serien])
-  const seriesInSaison = useMemo(
-    () => serien.filter((s) => s.saisonId === saisonId),
-    [serien, saisonId]
-  )
+  const seriesInSaison = useMemo(() => serien.filter((s) => s.saisonId === saisonId), [serien, saisonId])
 
   function wechsleSaison(neueSaison) {
     const ziel = serien.find((s) => s.saisonId === neueSaison && s.seriesId === seriesId)
@@ -112,12 +144,11 @@ export default function App() {
     setStreckeId(standardStrecke(k, e, daten.streckenMap))
   }
 
-  // ---- Overlay: eigene, minimalistische Ansicht (transparenter Hintergrund) --
+  // ---- Overlay: eigene, transparente Ansicht --------------------------------
   if (route.name === 'overlay') {
     return <Overlay route={route} daten={daten} lade={zustand.lade} redaktion={redaktion} />
   }
 
-  // ---- Lade- / Fehlerzustand ------------------------------------------------
   if (zustand.lade) {
     return (
       <div className="app">
@@ -155,40 +186,43 @@ export default function App() {
     )
   }
 
+  const gemeinsam = {
+    saisons,
+    saisonId,
+    seriesInSaison,
+    seriesId,
+    onSaison: wechsleSaison,
+    onSeries: wechsleSeries,
+    kontext,
+    streckenMap: daten.streckenMap,
+    onFahrer: setOffenerFahrer,
+  }
+
   return (
     <div className="app">
       <Kopf route={route} />
 
       {route.name === 'meisterschaft' ? (
-        <Meisterschaft
-          saisons={saisons}
-          saisonId={saisonId}
-          seriesInSaison={seriesInSaison}
-          seriesId={seriesId}
-          onSaison={wechsleSaison}
-          onSeries={wechsleSeries}
-          kontext={kontext}
-          onFahrer={setOffenerFahrer}
-        />
+        <Meisterschaft {...gemeinsam} />
+      ) : route.name === 'vergleich' ? (
+        <Vergleich {...gemeinsam} />
+      ) : route.name === 'overlays' ? (
+        <OverlaySteuerung {...gemeinsam} />
+      ) : route.name === 'spickzettel' ? (
+        <Spickzettel {...gemeinsam} redaktion={redaktion} />
       ) : (
         <GridUebersicht
+          {...gemeinsam}
           daten={daten}
-          saisons={saisons}
-          saisonId={saisonId}
-          seriesInSaison={seriesInSaison}
-          seriesId={seriesId}
           streckeId={streckeId}
-          onSaison={wechsleSaison}
-          onSeries={wechsleSeries}
           onStrecke={setStreckeId}
-          kontext={kontext}
           redaktion={redaktion}
-          onFahrer={setOffenerFahrer}
         />
       )}
 
       {offenerFahrer && kontext && (
         <Fahrerkarte
+          key={offenerFahrer + saisonId + seriesId}
           fahrerName={offenerFahrer}
           saisonId={saisonId}
           seriesId={seriesId}
@@ -201,13 +235,24 @@ export default function App() {
 
       <footer className="fuss">
         <span>ASPL Kommentatoren-Cockpit · intern</span>
-        <span className="basis">Daten: {daten?.basis}</span>
+        {daten?.ausCache && <span className="offline-badge">⚠ offline · Puffer</span>}
+        <span className="stand">
+          Stand {standText(daten?.stand, takt)}
+          <button className="mini-refresh" onClick={refresh} title="Jetzt aktualisieren">
+            ⟳
+          </button>
+        </span>
       </footer>
     </div>
   )
 }
 
 function Kopf({ route }) {
+  const knopf = (name, hash, label) => (
+    <button className={'nav-knopf' + (route.name === name ? ' aktiv' : '')} onClick={() => gehe(hash)}>
+      {label}
+    </button>
+  )
   return (
     <header className="kopf">
       <div className="marke">
@@ -215,18 +260,11 @@ function Kopf({ route }) {
         <span className="sub">Kommentatoren-Cockpit</span>
       </div>
       <nav className="kopf-nav">
-        <button
-          className={'nav-knopf' + (route.name === 'grid' ? ' aktiv' : '')}
-          onClick={() => gehe('#/')}
-        >
-          🏁 Startfeld
-        </button>
-        <button
-          className={'nav-knopf' + (route.name === 'meisterschaft' ? ' aktiv' : '')}
-          onClick={() => gehe('#/meisterschaft')}
-        >
-          🏆 Meisterschaft
-        </button>
+        {knopf('grid', '#/', '🏁 Startfeld')}
+        {knopf('meisterschaft', '#/meisterschaft', '🏆 Meisterschaft')}
+        {knopf('vergleich', '#/vergleich', '⚔️ Vergleich')}
+        {knopf('overlays', '#/overlays', '📺 Overlays')}
+        {knopf('spickzettel', '#/spickzettel', '🗣️ Spickzettel')}
       </nav>
     </header>
   )

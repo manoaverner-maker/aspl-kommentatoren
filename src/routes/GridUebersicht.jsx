@@ -4,6 +4,7 @@ import Blitzsuche from '../komponenten/Blitzsuche.jsx'
 import Streckeninfo from '../komponenten/Streckeninfo.jsx'
 import EngstesDuell from '../komponenten/EngstesDuell.jsx'
 import ZufallsFakt from '../komponenten/ZufallsFakt.jsx'
+import NaechstesRennen from '../komponenten/NaechstesRennen.jsx'
 import { startfeld, engstesDuell, faktenTopf } from '../daten.js'
 import { nummer } from '../lib/format.js'
 
@@ -78,6 +79,7 @@ export default function GridUebersicht({
         </div>
 
         <div className="spalte">
+          <NaechstesRennen kalenderObj={kontext.kalenderObj} streckenMap={daten.streckenMap} />
           <Streckeninfo strecke={strecke} />
           <EngstesDuell duell={duell} onFahrer={onFahrer} />
           <ZufallsFakt fakten={fakten} />

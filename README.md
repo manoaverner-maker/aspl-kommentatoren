@@ -38,13 +38,29 @@ http://localhost:5174/aspl-kommentatoren/?daten=http://localhost:5173/aspl-rennk
 
 | URL | Ansicht |
 |-----|---------|
-| `#/` | Startfeld-Grid + Blitzsuche + Streckeninfo + engstes Duell + Zufalls-Fakt |
-| `#/meisterschaft` | Fahrer- und (bei Team-Series) Teamwertung |
-| `#/overlay/<saison>/<series>/<fahrer-slug>` | **OBS-Overlay** — Lower-Third, transparenter Hintergrund |
+| `#/` | Startfeld-Grid + Blitzsuche + **Nächstes Rennen/Countdown** + Streckeninfo + engstes Duell + Zufalls-Fakt |
+| `#/meisterschaft` | Fahrer-/Teamwertung + **Titel-Rechner** + Saison-Rekorde + Bewegungen (▲▼) + Form-Kurve |
+| `#/vergleich` | **Head-to-Head** — zwei Fahrer direkt gegenübergestellt, Rennen für Rennen |
+| `#/overlays` | **OBS-Steuerpult** — alle Overlay-URLs zum Kopieren/Öffnen |
+| `#/spickzettel` | druckbarer **Aussprache-Spickzettel** |
+| `#/overlay/<typ>/<saison>/<series>[/<arg>]` | **OBS-Overlays** (transparent) |
 
-Das Overlay öffnet man aus jeder Fahrerkarte über **„📺 Auf Stream zeigen"**
-(neues Fenster) bzw. **„🔗 Overlay-URL kopieren"** — diese URL kommt direkt als
-Browser-Source in OBS (transparenter Hintergrund, kein Rand, keine Navigation).
+### OBS-Overlays
+
+`<typ>` = `fahrer` (arg = Fahrer-Slug) · `standings` · `podium` (arg = Strecken-ID) ·
+`duell` · `next`. Optionen per Query: `?pos=rechts`, `?hide=<sekunden>` (Auto-Ausblenden).
+Die Overlays aktualisieren sich selbst, wenn neue Ergebnisse eingetragen werden.
+Am einfachsten holt man die fertigen URLs unter **`#/overlays`** (Kopieren/Öffnen)
+oder aus jeder Fahrerkarte über **„📺 Auf Stream zeigen"**.
+
+## Auto-Storylines & Robustheit
+
+- **Titel-Rechner**, **Head-to-Head**, **Form-Kurve** (letzte Ergebnisse), **Rekorde**,
+  **Bewegungen** in der Wertung und **Auto-Talking-Points** auf der Fahrerkarte —
+  alles selbstberechnet aus den Ergebnissen (`src/analyse.js`).
+- **Offline-Puffer** (localStorage) + **Auto-Refresh** alle 3 Min (`src/daten.js`) —
+  ein Netz-Blip mitten im Stream killt die Seite nicht; „Stand vor X Min" im Footer.
+- **Eigene Notiz je Fahrer** (localStorage, nur auf diesem Gerät) in der Fahrerkarte.
 
 ## Redaktionelle Inhalte (Spitzname, Aussprache, Fun Fact, Rivalität, Nation)
 

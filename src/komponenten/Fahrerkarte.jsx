@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { fahrerDetails } from '../daten.js'
+import { formKurve, talkingPoints } from '../analyse.js'
 import { slug, nummer } from '../lib/format.js'
 import { overlayUrl } from '../lib/router.js'
+import FormChips from './FormChips.jsx'
 
-// Grosse, klare Detailkarte. Kennzahlen (Position/Punkte/Rueckstand/Siege/…)
-// werden live aus den Ergebnissen berechnet; die redaktionellen Felder kommen
-// aus src/data/redaktion.json (zunaechst leer, nach und nach befuellbar).
+// Grosse Detailkarte. Kennzahlen + Form + Auto-Talking-Points werden live aus
+// den Ergebnissen berechnet; redaktionelle Felder kommen aus redaktion.json;
+// die Notizen speichert der Kommentator pro Fahrer lokal (localStorage).
 export default function Fahrerkarte({
   fahrerName,
   saisonId,
@@ -18,7 +20,26 @@ export default function Fahrerkarte({
   const [kopiert, setKopiert] = useState(false)
   const details = fahrerDetails(kontext.ergebnisObj, kontext.system, fahrerName)
   const red = redaktion[slug(fahrerName)] ?? {}
-  const url = overlayUrl(saisonId, seriesId, slug(fahrerName))
+  const url = overlayUrl('fahrer', saisonId, seriesId, slug(fahrerName))
+  const form = formKurve(kontext.rennen, kontext.ergebnisObj, fahrerName, 5)
+  const tps = talkingPoints(details, kontext.wertung.fahrer, form)
+
+  // Persönliche Notiz je Fahrer (bleibt lokal erhalten — nie automatisch gelöscht)
+  const notizKey = `aspl_notiz_${saisonId}_${seriesId}_${slug(fahrerName)}`
+  const [notiz, setNotiz] = useState(() => {
+    try {
+      return localStorage.getItem(notizKey) || ''
+    } catch {
+      return ''
+    }
+  })
+  useEffect(() => {
+    try {
+      localStorage.setItem(notizKey, notiz)
+    } catch {
+      /* ignore */
+    }
+  }, [notizKey, notiz])
 
   useEffect(() => {
     const esc = (e) => e.key === 'Escape' && onClose()
@@ -27,7 +48,7 @@ export default function Fahrerkarte({
   }, [onClose])
 
   function aufStreamZeigen() {
-    window.open(url, 'aspl-overlay', 'width=900,height=320')
+    window.open(url, 'aspl-overlay', 'width=960,height=360')
   }
   async function kopiereUrl() {
     try {
@@ -88,6 +109,24 @@ export default function Fahrerkarte({
           ))}
         </div>
 
+        {form.length > 0 && (
+          <div className="fk-formzeile">
+            <span className="fk-form-lab">Form (zuletzt)</span>
+            <FormChips form={form} />
+          </div>
+        )}
+
+        {tps.length > 0 && (
+          <div className="fk-abschnitt">
+            <h3>⚡ Auto-Storylines</h3>
+            <ul className="talking-points">
+              {tps.map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {details.ergebnisse.length > 0 && (
           <div className="fk-abschnitt">
             <h3>Ergebnisse diese Saison</h3>
@@ -116,6 +155,17 @@ export default function Fahrerkarte({
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="fk-abschnitt">
+          <h3>📝 Eigene Notiz (nur auf diesem Gerät)</h3>
+          <textarea
+            className="fk-notiz"
+            value={notiz}
+            onChange={(e) => setNotiz(e.target.value)}
+            placeholder="Schnelle Notiz während des Rennens …"
+            rows={3}
+          />
         </div>
 
         <div className="fk-aktionen">

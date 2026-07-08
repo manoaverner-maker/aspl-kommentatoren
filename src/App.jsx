@@ -17,7 +17,7 @@ import GridUebersicht from './routes/GridUebersicht.jsx'
 import Meisterschaft from './routes/Meisterschaft.jsx'
 import Vergleich from './routes/Vergleich.jsx'
 import OverlaySteuerung from './routes/OverlaySteuerung.jsx'
-import Spickzettel from './routes/Spickzettel.jsx'
+import Strecken from './routes/Strecken.jsx'
 import Overlay from './routes/Overlay.jsx'
 import Fahrerkarte from './komponenten/Fahrerkarte.jsx'
 
@@ -208,8 +208,8 @@ export default function App() {
         <Vergleich {...gemeinsam} />
       ) : route.name === 'overlays' ? (
         <OverlaySteuerung {...gemeinsam} />
-      ) : route.name === 'spickzettel' ? (
-        <Spickzettel {...gemeinsam} redaktion={redaktion} />
+      ) : route.name === 'strecken' ? (
+        <Strecken daten={daten} kontext={kontext} />
       ) : (
         <GridUebersicht
           {...gemeinsam}
@@ -263,8 +263,8 @@ function Kopf({ route }) {
         {knopf('grid', '#/', '🏁 Startfeld')}
         {knopf('meisterschaft', '#/meisterschaft', '🏆 Meisterschaft')}
         {knopf('vergleich', '#/vergleich', '⚔️ Vergleich')}
+        {knopf('strecken', '#/strecken', '🗺️ Strecken')}
         {knopf('overlays', '#/overlays', '📺 Overlays')}
-        {knopf('spickzettel', '#/spickzettel', '🗣️ Spickzettel')}
       </nav>
     </header>
   )

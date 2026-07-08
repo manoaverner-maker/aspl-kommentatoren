@@ -31,7 +31,7 @@ export function parseHash() {
   if (teile[0] === 'meisterschaft') return { name: 'meisterschaft', query }
   if (teile[0] === 'vergleich') return { name: 'vergleich', query }
   if (teile[0] === 'overlays') return { name: 'overlays', query }
-  if (teile[0] === 'spickzettel') return { name: 'spickzettel', query }
+  if (teile[0] === 'strecken') return { name: 'strecken', query }
   return { name: 'grid', query }
 }
 

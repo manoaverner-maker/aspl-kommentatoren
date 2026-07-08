@@ -574,7 +574,76 @@ body.overlay-modus { background: transparent; }
 .ovn-datum { color: #b9b9c4; font-size: 15px; margin-top: 4px; }
 .ovn-cd { margin-top: 8px; font-size: 26px; font-weight: 900; color: var(--gold); }
 
-/* ---- Druck (Spickzettel) -------------------------------------------------- */
+/* ---- Strecken-Atlas ------------------------------------------------------- */
+.strecken-zaehler { color: var(--text-schwach); font-size: 13px; font-weight: 700; }
+.strecken-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px;
+}
+.strecke-karte {
+  background: var(--flaeche); border: 1px solid var(--rand); border-radius: var(--radius);
+  overflow: hidden; cursor: pointer; text-align: left; padding: 0; color: var(--text);
+  transition: border-color .12s, transform .12s;
+}
+.strecke-karte:hover { border-color: var(--rot); transform: translateY(-2px); }
+.sk-umriss {
+  position: relative; aspect-ratio: 4 / 3;
+  background: radial-gradient(circle at 42% 32%, #1f3a24, #10201a 75%);
+  border-bottom: 1px solid var(--rand);
+}
+.sk-badge {
+  position: absolute; top: 7px; right: 7px; background: var(--rot); color: #fff;
+  font-size: 10px; font-weight: 800; letter-spacing: .5px; padding: 2px 7px; border-radius: 5px;
+}
+.sk-info { padding: 9px 12px; }
+.sk-name { font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 7px; }
+.sk-name .flagge { font-size: 18px; }
+.sk-meta { color: var(--text-schwach); font-size: 12.5px; margin-top: 2px; }
+.umriss { width: 100%; height: 100%; display: block; }
+.umriss-fehlt {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  color: var(--text-schwach); font-size: 13px; font-style: italic;
+}
+.umriss-fehlt.gross { font-size: 16px; }
+
+/* Asphaltband */
+.u-casing { fill: none; stroke: #6d6d76; stroke-linejoin: round; stroke-linecap: round; }
+.u-asphalt { fill: none; stroke: #2d2d33; stroke-linejoin: round; stroke-linecap: round; }
+.u-mitte { fill: none; stroke: rgba(255,255,255,.55); stroke-linejoin: round; stroke-linecap: butt; }
+.u-start { fill: #fff; }
+
+/* Strecken-Detail */
+.strecke-detail {
+  position: relative; width: min(880px, 100%); max-height: 92vh; overflow-y: auto;
+  background: var(--flaeche); border: 1px solid var(--rand-hell); border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.7);
+}
+.sd-kopf { padding: 20px 24px 14px; border-bottom: 1px solid var(--rand); }
+.sd-body { display: grid; grid-template-columns: 1.4fr 1fr; gap: 0; }
+@media (max-width: 720px) { .sd-body { grid-template-columns: 1fr; } }
+.sd-karte {
+  background: radial-gradient(circle at 42% 34%, #1f3a24, #0e1c16 78%);
+  min-height: 340px; display: flex; align-items: center; justify-content: center; padding: 18px;
+  border-right: 1px solid var(--rand);
+}
+@media (max-width: 720px) { .sd-karte { border-right: none; border-bottom: 1px solid var(--rand); } }
+.sd-seite { padding: 18px 20px; }
+.kurven-liste { margin-top: 16px; }
+.kurven-liste h3, .sd-abschnitt h3 {
+  font-size: 11px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase;
+  color: var(--text-schwach); margin-bottom: 10px;
+}
+.kurven-liste ul { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 18px; }
+@media (max-width: 720px) { .kurven-liste ul { columns: 2; } }
+.kurven-liste li {
+  break-inside: avoid; font-size: 14px; padding: 3px 0 3px 16px; position: relative; line-height: 1.35;
+}
+.kurven-liste li::before { content: "▸"; position: absolute; left: 0; color: var(--rot-hell); }
+.kurven-hinweis { margin-top: 10px; color: var(--text-schwach); font-size: 12.5px; font-style: italic; }
+.sd-abschnitt { padding: 16px 24px; border-top: 1px solid var(--rand); }
+.sd-quelle { padding: 12px 24px 18px; color: var(--text-schwach); font-size: 12px; }
+.sd-quelle a { color: var(--text-dim); }
+
+/* ---- Druck (alt) ---------------------------------------------------------- */
 @media print {
   .kopf, .fuss, .nur-bildschirm { display: none !important; }
   body { background: #fff; color: #000; }

@@ -41,8 +41,8 @@ http://localhost:5174/aspl-kommentatoren/?daten=http://localhost:5173/aspl-rennk
 | `#/` | Startfeld-Grid + Blitzsuche + **Nächstes Rennen/Countdown** + Streckeninfo + engstes Duell + Zufalls-Fakt |
 | `#/meisterschaft` | Fahrer-/Teamwertung + **Titel-Rechner** + Saison-Rekorde + Bewegungen (▲▼) + Form-Kurve |
 | `#/vergleich` | **Head-to-Head** — zwei Fahrer direkt gegenübergestellt, Rennen für Rennen |
+| `#/strecken` | **Strecken-Atlas** — alle 25 ACC-Strecken mit realistischem Umriss + Kurvennamen |
 | `#/overlays` | **OBS-Steuerpult** — alle Overlay-URLs zum Kopieren/Öffnen |
-| `#/spickzettel` | druckbarer **Aussprache-Spickzettel** |
 | `#/overlay/<typ>/<saison>/<series>[/<arg>]` | **OBS-Overlays** (transparent) |
 
 ### OBS-Overlays
@@ -52,6 +52,20 @@ http://localhost:5174/aspl-kommentatoren/?daten=http://localhost:5173/aspl-rennk
 Die Overlays aktualisieren sich selbst, wenn neue Ergebnisse eingetragen werden.
 Am einfachsten holt man die fertigen URLs unter **`#/overlays`** (Kopieren/Öffnen)
 oder aus jeder Fahrerkarte über **„📺 Auf Stream zeigen"**.
+
+## Strecken-Atlas
+
+`#/strecken` zeigt alle 25 ACC-Strecken mit einem realistisch gezeichneten
+Umriss (Asphaltband auf Grün, Start/Ziel, Mittellinie) und den Kurvennamen.
+
+- **Geometrie** liegt statisch in [`src/data/streckenlayout.json`](src/data/streckenlayout.json)
+  und wird EINMALIG per `node scripts/strecken-layout.mjs` erzeugt (braucht Netz) —
+  Quellen: [bacinger/f1-circuits](https://github.com/bacinger/f1-circuits) (GeoJSON, MIT,
+  15 F1-/GP-Strecken) und **Wikimedia Commons** (SVG, CC, übrige 10). Die Attribution
+  steht je Strecke in der Detailansicht. Zur Laufzeit ist nichts extern zu laden.
+- **Kurvennamen** stehen kuratiert + editierbar in
+  [`src/data/streckenkurven.json`](src/data/streckenkurven.json) (Schlüssel = Strecken-ID)
+  — ergänzen/korrigieren nach Bedarf.
 
 ## Auto-Storylines & Robustheit
 
